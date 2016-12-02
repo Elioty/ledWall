@@ -1,6 +1,0 @@
-sudo minicom -b 9600 -8 -D /dev/ttyACM0
-
-avr-g++ -std=c++11 -Wall -Wextra -Werror -Os -mmcu=atmega2560 -DF_CPU=16000000UL main.cpp -o leds.elf
-avr-objcopy -O ihex leds.elf leds.hex
-sudo avrdude -cwiring -patmega2560 -P /dev/ttyACM0 -U flash:w:leds.hex -D
-
