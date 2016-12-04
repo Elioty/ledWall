@@ -52,7 +52,7 @@ int main()
   DDRB |= (1 << PB7);
   PORTB |= (1 << PB7);
 
-  static constexpr char HELLO[] = "Hello World\r\n";
+  static constexpr char HELLO[] = "Hello World\n\r";
   for(uint8_t i = 0; i < ARRAY_LEN(HELLO); ++i)
     UART0_Transmit(HELLO[i]);
 
@@ -61,6 +61,7 @@ int main()
     currentAnimation->update();
     if(Timer1_Expired()) {
       // Wow, we were too slow!!
+      // We should reset here
       PORTB |= (1 << PB7);
       while(1);
     }

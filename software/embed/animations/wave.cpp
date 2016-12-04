@@ -139,8 +139,7 @@ void Wave::stop()
 
 void Wave::update()
 {
-  for(uint8_t i = 0; i < _nbLEDData; ++i)
-    LED_Write(_LEDData[i]);
+  LED_Write(_LEDData, _nbLEDData);
 
   if(++_step >= WAVE_LEN)
     _step = 0;

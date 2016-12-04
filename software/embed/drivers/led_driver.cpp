@@ -38,38 +38,24 @@
 #include "drivers.hpp"
 #include "led_driver.hpp"
 
-void LED_Write(const LEDDriverData& data)
+void LED_Write(const LEDDriverData* data, uint8_t count)
 {
-  uint32_t packetHeader;
-
-  packetHeader = 0b100101; // Magic write command
-
-  packetHeader <<= 5;
-  packetHeader |= 0b10110;
-
-  packetHeader <<= 7;
-  packetHeader |= data._BCred;
-
-  packetHeader <<= 7;
-  packetHeader |= data._BCgreen;
-
-  packetHeader <<= 7;
-  packetHeader |= data._BCblue;
-
   uint8_t sreg = SREG;
   cli();
 
-  SPI_Transmit(packetHeader >> 24);
-  SPI_Transmit(packetHeader >> 16);
-  SPI_Transmit(packetHeader >> 8);
-  SPI_Transmit(packetHeader);
+  for(uint8_t i = 0; i < count; ++i) {
+    SPI_Transmit(data[i]._packetHeader >> 24);
+    SPI_Transmit(data[i]._packetHeader >> 16);
+    SPI_Transmit(data[i]._packetHeader >> 8);
+    SPI_Transmit(data[i]._packetHeader);
 
-  uint8_t channel = ARRAY_LEN(data._PWMs);
-  do {
-    --channel;
-    SPI_Transmit(data._PWMs[channel] >> 8);
-    SPI_Transmit(data._PWMs[channel]);
-  } while(channel != 0);
+    uint8_t channel = ARRAY_LEN(data[i]._PWMs);
+    do {
+      --channel;
+      SPI_Transmit(data[i]._PWMs[channel] >> 8);
+      SPI_Transmit(data[i]._PWMs[channel]);
+    } while(channel != 0);
+  }
 
   _delay_us(2);
   SREG = sreg;

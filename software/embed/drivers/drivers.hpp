@@ -43,8 +43,8 @@ inline void SPI_Init() __maybe_unused;
 inline void SPI_Init()
 {
   DDRB |= (1 << PB0) | (1 << PB1) | (1 << PB2);
-  SPCR = (1 << SPE) | (1 << MSTR) | (1 << SPR0);
-  SPSR = (1 << SPI2X);
+  SPCR = (1 << SPE) | (1 << MSTR);// | (1 << SPR0);
+  //SPSR = (1 << SPI2X);
 }
 
 inline void SPI_Transmit(uint8_t byte) __maybe_unused;

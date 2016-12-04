@@ -41,30 +41,36 @@
 
 class LEDDriverData
 {
-  BC_t _BCred;
-  BC_t _BCgreen;
-  BC_t _BCblue;
+  uint32_t _packetHeader;
   union {
     ledpwm_t _PWMs[CHANNEL_PER_LED_DRIVER];
     RGB      _LEDColors[LED_PER_LED_DRIVER];
   };
 
-  friend void LED_Write(const LEDDriverData& data);
+  friend void LED_Write(const LEDDriverData* data, uint8_t count);
 
 public:
-#define BC_ACCESSORS(__color)                   \
-  inline BC_t getBC##__color() const            \
-  {                                             \
-    return _BC##__color;                        \
-  }                                             \
-  inline void setBC##__color(BC_t val)          \
-  {                                             \
-    _BC##__color = val > BC_MAX ? BC_MAX : val; \
+  LEDDriverData() :
+    _packetHeader((0b100101UL << 26) | (0b10110UL << 21)),
+    _PWMs { 0 }
+  {
   }
 
-  BC_ACCESSORS(red);
-  BC_ACCESSORS(green);
-  BC_ACCESSORS(blue);
+#define BC_ACCESSORS(__color, __offset)                                        \
+  inline BC_t getBC##__color() const                                           \
+  {                                                                            \
+    return (_packetHeader >> __offset) & BC_MASK;                              \
+  }                                                                            \
+  inline void setBC##__color(BC_t val)                                         \
+  {                                                                            \
+     uint32_t _val = ((uint32_t) (val > BC_MAX ? BC_MAX : val)) << __offset;   \
+    _packetHeader = (_packetHeader & ~(((uint32_t) BC_MASK) << __offset)) |    \
+                    _val;                                                      \
+  }
+
+  BC_ACCESSORS(red, 0);
+  BC_ACCESSORS(green, 7);
+  BC_ACCESSORS(blue, 14);
 #undef BC_ACCESSORS
 
   inline ledpwm_t getPWM(uint8_t channel) const
@@ -88,6 +94,6 @@ public:
   }
 };
 
-void LED_Write(const LEDDriverData& data);
+void LED_Write(const LEDDriverData* data, uint8_t count);
 
 #endif//__LED_DRIVER__

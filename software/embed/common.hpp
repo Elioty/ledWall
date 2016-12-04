@@ -47,14 +47,16 @@ using BC_t = uint8_t;
 static constexpr uint8_t CHANNEL_PER_LED_DRIVER __maybe_unused = 12;
 static constexpr uint8_t LED_PER_LED_DRIVER     __maybe_unused =
     CHANNEL_PER_LED_DRIVER / 3;
-static constexpr uint8_t LED_DRIVERS            __maybe_unused = 1;
+static constexpr uint8_t LED_DRIVERS            __maybe_unused = 3;
 
-static constexpr ledpwm_t LEDPWM_MAX = 0x1000 - 1;
-static constexpr BC_t BC_MAX = 0x7F - 1;
+static constexpr ledpwm_t LEDPWM_MASK __maybe_unused = 0x0FFF;
+static constexpr ledpwm_t LEDPWM_MAX  __maybe_unused = LEDPWM_MASK;
+static constexpr BC_t BC_MASK         __maybe_unused = 0x7F;
+static constexpr BC_t BC_MAX          __maybe_unused = BC_MASK;
 
-static constexpr BC_t BC_RED   __maybe_unused = 96;
-static constexpr BC_t BC_GREEN __maybe_unused = 96;
-static constexpr BC_t BC_BLUE  __maybe_unused = 96;
+static constexpr BC_t BC_RED   __maybe_unused = 127;
+static constexpr BC_t BC_GREEN __maybe_unused = 95;
+static constexpr BC_t BC_BLUE  __maybe_unused = 85;
 
 inline void* operator new(size_t s) __maybe_unused;
 inline void* operator new(size_t s)
