@@ -37,25 +37,59 @@
 #include "drivers/drivers.hpp"
 #include "drivers/led_driver.hpp"
 #include "animations/wave.hpp"
+#include "animations/chaser.hpp"
 
 int main()
 {
+  /********************************** Inits **********************************/
   SPI_Init();
   UART0_Init();
 
-  LEDDriverData LEDData[LED_DRIVERS];
-  Wave waveAnimation(LEDData, ARRAY_LEN(LEDData));
-
-  Animation* currentAnimation = &waveAnimation;
-  currentAnimation->start();
-
-  DDRB |= (1 << PB7);
-  PORTB |= (1 << PB7);
-
+  /******************************* Hello world *******************************/
   static constexpr char HELLO[] = "Hello World\n\r";
   for(uint8_t i = 0; i < ARRAY_LEN(HELLO); ++i)
     UART0_Transmit(HELLO[i]);
 
+  /******************** Reading and displaying team color ********************/
+  DDRA  &= ~(1 << PA0); // Set PA0 as input
+  PORTA |=  (1 << PA0); // Enable pull-up on PA0
+
+  RGB color;
+  uint8_t c = PINA & (1 << PA0);
+
+  static constexpr char COLOR[] = "color == ";
+  for(uint8_t i = 0; i < ARRAY_LEN(COLOR); ++i)
+    UART0_Transmit(COLOR[i]);
+
+  if(c != 0) {
+    color = GREEN;
+    static constexpr char S_GREEN[] = "GREEN";
+    for(uint8_t i = 0; i < ARRAY_LEN(S_GREEN); ++i)
+      UART0_Transmit(S_GREEN[i]);
+  }
+  else {
+    color = ORANGE;
+    static constexpr char S_ORANGE[] = "ORANGE";
+    for(uint8_t i = 0; i < ARRAY_LEN(S_ORANGE); ++i)
+      UART0_Transmit(S_ORANGE[i]);
+  }
+
+  UART0_Transmit('\n');
+  UART0_Transmit('\r');
+
+  /************************ Initializing the animation ***********************/
+  LEDDriverData LEDData[LED_DRIVERS];
+  //Wave waveAnimation(LEDData, ARRAY_LEN(LEDData));
+  Chaser chaserAnimation(LEDData, ARRAY_LEN(LEDData), color, 4);
+
+  //Animation* currentAnimation = &waveAnimation;
+  Animation* currentAnimation = &chaserAnimation;
+  currentAnimation->start();
+
+  DDRB  |= (1 << PB7); // Set PB7 as output
+  PORTB |= (1 << PB7); // Set PB7 high
+
+  /**************************** Run the animation ****************************/
   Timer1_Start();
   while(1) {
     currentAnimation->update();
@@ -63,10 +97,16 @@ int main()
       // Wow, we were too slow!!
       // We should reset here
       PORTB |= (1 << PB7);
+      static constexpr char TOO_SLOW[] = "We were too slow!\n\r";
+      for(uint8_t i = 0; i < ARRAY_LEN(TOO_SLOW); ++i)
+	UART0_Transmit(TOO_SLOW[i]);
       while(1);
     }
+    // FIXME: should be only one wait, the animation has to manage its speed itself
     Timer1_Wait();
-    PINB = (1 << PB7);
+    Timer1_Wait();
+    Timer1_Wait();
+    PINB = (1 << PB7); // Toggle PB7
   }
 
 #if defined(UART_CLIENT)

@@ -32,37 +32,37 @@
  * $ledWall$
  */
 
-#ifndef __COLORS__
-#define __COLORS__
+#ifndef __CHASER__
+#define __CHASER__
 
-#include "common.hpp"
+#include "../animation.hpp"
+#include "../colors.hpp"
 
-union RGB {
-  ledpwm_t array[3];
-  struct {
-    ledpwm_t r;
-    ledpwm_t g;
-    ledpwm_t b;
-  };
+class Chaser final : public Animation
+{
+public:
+  Chaser(LEDDriverData* LEDData, uint8_t nb, const RGB& color, uint8_t len);
+  virtual ~Chaser();
+
+  virtual void setup(uint8_t buf, uint16_t len);
+  virtual void start();
+  virtual void stop();
+  virtual void update();
+  
+  inline void setColor(const RGB& color)
+  {
+    _color = color;
+  }
+
+  inline void setLength(uint8_t len)
+  {
+    _len = len;
+  }
+  
+private:
+  RGB _color;
+  uint8_t _len;
+  uint8_t _step;
 };
 
-static constexpr RGB BLACK         __maybe_unused = {    0,    0,    0 };
-static constexpr RGB WHITE         __maybe_unused = { 4096, 4096, 4096 };
-static constexpr RGB COLOR_WHEEL[] __maybe_unused = {
-    { 4096,    0,    0 },
-    { 4096, 4096,    0 },
-    {    0, 4096,    0 },
-    {    0, 4096, 4096 },
-    {    0,    0, 4096 },
-    { 4096,    0, 4096 },
-};
-static constexpr RGB RED          __maybe_unused = COLOR_WHEEL[0];
-static constexpr RGB YELLOW       __maybe_unused = COLOR_WHEEL[1];
-static constexpr RGB GREEN        __maybe_unused = COLOR_WHEEL[2];
-static constexpr RGB TURQUOISE    __maybe_unused = COLOR_WHEEL[3];
-static constexpr RGB BLUE         __maybe_unused = COLOR_WHEEL[4];
-static constexpr RGB MAGENTA      __maybe_unused = COLOR_WHEEL[5];
-
-static constexpr RGB ORANGE       __maybe_unused = { 4095, 960, 0 };
-
-#endif//__COLORS__
+#endif//__CHASER__

@@ -32,68 +32,75 @@
  * $ledWall$
  */
 
-#ifndef __COMMON__
-#define __COMMON__
+#include "chaser.hpp"
+#include "../common.hpp"
+#include "../colors.hpp"
+#include "../drivers/led_driver.hpp"
 
-#include <stdlib.h>
-#include <stdint.h>
-
-#define __maybe_unused  __attribute__((unused))
-#define ARRAY_LEN(array) (sizeof(array) / sizeof(array[0]))
-
-using ledpwm_t = uint16_t;
-using BC_t = uint8_t;
-
-static constexpr uint8_t CHANNEL_PER_LED_DRIVER __maybe_unused = 12;
-static constexpr uint8_t LED_PER_LED_DRIVER     __maybe_unused =
-    CHANNEL_PER_LED_DRIVER / 3;
-static constexpr uint8_t LED_DRIVERS            __maybe_unused = 3;
-
-static constexpr ledpwm_t LEDPWM_MASK __maybe_unused = 0x0FFF;
-static constexpr ledpwm_t LEDPWM_MAX  __maybe_unused = LEDPWM_MASK;
-static constexpr BC_t BC_MASK         __maybe_unused = 0x7F;
-static constexpr BC_t BC_MAX          __maybe_unused = BC_MASK;
-
-static constexpr BC_t BC_RED   __maybe_unused = 127;
-static constexpr BC_t BC_GREEN __maybe_unused = 95;
-static constexpr BC_t BC_BLUE  __maybe_unused = 85;
-
-inline void* operator new(size_t s) __maybe_unused;
-inline void* operator new(size_t s)
+Chaser::Chaser(LEDDriverData* LEDData, uint8_t nb, const RGB& color, uint8_t len) :
+    Animation(LEDData, nb), _color(color), _len(len), _step(0)
 {
-  return malloc(s);
 }
 
-inline void operator delete(void* p) __maybe_unused;
-inline void operator delete(void* p)
+Chaser::~Chaser()
 {
-  free(p);
 }
 
-inline void operator delete(void* p, size_t s) __maybe_unused;
-inline void operator delete(void* p, size_t s)
+void Chaser::setup(uint8_t buf, uint16_t len)
 {
-  (void) s;
-  free(p);
+  (void) buf;
+  (void) len;
 }
 
-inline void* operator new[](size_t s) __maybe_unused;
-inline void* operator new[](size_t s)
+void Chaser::start()
 {
-  return malloc(s);
+  _step = 0;
+
+  for(uint8_t i = 0; i < _nbLEDData; ++i) {
+    _LEDData[i].setBCred(BC_RED);
+    _LEDData[i].setBCgreen(BC_GREEN);
+    _LEDData[i].setBCblue(BC_BLUE);
+    for(uint8_t j = 0; j < LED_PER_LED_DRIVER; ++j)
+      _LEDData[i].setLEDColor(j, BLACK);
+  }
 }
 
-inline void operator delete[](void* p) __maybe_unused;
-inline void operator delete[](void* p)
+void Chaser::stop()
 {
-  free(p);
 }
 
-inline void operator delete[](void* p, size_t s) __maybe_unused;
-inline void operator delete[](void* p, size_t s)
+void Chaser::update()
 {
-  (void) s;
-  free(p);
-}
+  LED_Write(_LEDData, _nbLEDData);
 
-#endif//__COMMON__
+  if(++_step >= (_nbLEDData * LED_PER_LED_DRIVER))
+    _step = 0;
+
+  uint8_t rem = _len;
+  uint8_t idx;
+  uint8_t i;
+  uint8_t j;
+  do {
+    uint8_t dist = _len - rem;
+    
+    idx = _step - dist;
+    if(dist > _step)
+      idx += _nbLEDData * LED_PER_LED_DRIVER;
+    
+    i = idx / LED_PER_LED_DRIVER;
+    j = idx % LED_PER_LED_DRIVER;
+
+    _LEDData[i].setLEDColor(j, {
+	_color.r / ((dist + 1) * 2),
+	_color.g / ((dist + 1) * 2),
+	_color.b / ((dist + 1) * 2)
+    });
+  } while(--rem != 0);
+
+  --idx;
+  if(idx >= (_nbLEDData * LED_PER_LED_DRIVER))
+    idx = (_nbLEDData * LED_PER_LED_DRIVER) - 1;
+  i = idx / LED_PER_LED_DRIVER;
+  j = idx % LED_PER_LED_DRIVER;
+  _LEDData[i].setLEDColor(j, BLACK);
+}

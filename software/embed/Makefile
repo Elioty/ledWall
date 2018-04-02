@@ -4,12 +4,14 @@ OBJCOPY=avr-objcopy
 
 MMCU=atmega2560
 FREQ=16000000UL
-DEV=/dev/ttyACM0
+DEV=/dev/ttyS0
 
-CXXFLAGS=-std=c++11 -Wall -Wextra -Werror -Os -mmcu=$(MMCU) -DF_CPU=$(FREQ)
-LDFLAGS=-mmcu=$(MMCU) -Os
+COMMON_FLAGS=-mmcu=$(MMCU) -g -Os -mcall-prologues -flto -fno-exceptions -fno-rtti -ffunction-sections -fdata-sections
 
-OBJS=main.o drivers/led_driver.o animations/wave.o common.o
+CXXFLAGS=$(COMMON_FLAGS) -std=c++17 -Wall -Wextra -Werror -DF_CPU=$(FREQ)
+LDFLAGS=$(COMMON_FLAGS)
+
+OBJS=main.o drivers/led_driver.o animations/wave.o animations/chaser.o common.o
 EXEC=leds.elf
 
 .PHONY: flash
@@ -29,6 +31,11 @@ animations/wave.o: animations/wave.hpp \
                    colors.hpp \
                    common.hpp \
                    drivers/led_driver.hpp
+animations/chaser.o: animations/chaser.hpp \
+                     animation.hpp \
+                     colors.hpp \
+                     common.hpp \
+                     drivers/led_driver.hpp
 main.o: common.hpp \
         drivers/drivers.hpp \
         drivers/led_driver.hpp \
